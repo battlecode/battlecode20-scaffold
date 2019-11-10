@@ -17,9 +17,6 @@ apply plugin: 'scala'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 
-// Extra tools from battlecode.
-// apply plugin: 'battlecode'
-
 // Tell gradle that we want Java 8.
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -40,19 +37,9 @@ sourceSets {
 }
 
 repositories {
-    // Let Gradle know about our own repository for hosting Battlecode.
-//    maven {
-//        url "http://battlecode-maven.s3-website-us-east-1.amazonaws.com/"
-//    }
-
     // Use the JCenter repo to resolve Scala dependencies.
     jcenter()
 }
-
-// Mark the client as a special dependency, so that we can handle it separately.
-//configurations {
-//    client
-//}
 
 // Download a different version of the client depending on the local OS.
 def os = System.getProperty("os.name").toLowerCase()
@@ -107,12 +94,7 @@ task updateDistribution(type: Exec) {
     description 'Updates the client and engine'
     group 'battlecode'
 
-
-    //on windows:
-    commandLine './pull_dist.bat' //'cmd', "cd", "dist", "&&", "git", "pull", "\"ext::ssh -i ../.ssh/id_rsa git@github.com %%S battlecode/battlecode20-dist\""
-
-    //on linux:
-    //commandLine './pull_dist.sh'
+    commandLine os.startsWith('windows') ? './pull_dist.bat' : './pull_dist.sh'
 }
 
 build.group = 'battlecode'
