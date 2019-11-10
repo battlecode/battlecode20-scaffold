@@ -24,8 +24,8 @@ targetCompatibility = 1.8
 // We override Gradle's defaults for project directory layout.
 sourceSets {
     main {
-        scala.srcDirs = ["src"]
-        kotlin.srcDirs = ["src"]
+        scala.srcDirs = [ project.property('source') ]
+        kotlin.srcDirs = [ project.property('source') ]
         output.classesDir = "$buildDir/classes"
     }
 
@@ -35,6 +35,16 @@ sourceSets {
         output.classesDir = "$buildDir/tests"
     }
 }
+
+//Setting default output directories for compiled classes and generated replay files
+//For other default properties, see gradle.properties
+if (!project.hasProperty("classLocation")) {
+    ext.classLocation = sourceSets.main.output.classesDir
+}
+if (!project.hasProperty("replay")) {
+    ext.replay = 'matches/' + project.property('teamA') + '-vs-' + project.property('teamB') + '-on-' + project.property('maps') + '.bc17'
+}
+
 
 repositories {
     // Use the JCenter repo to resolve Scala dependencies.
@@ -101,12 +111,7 @@ compileJava.dependsOn('updateDistribution')
 //   separated list of maps>`
 
 
-if (!project.hasProperty("classLocation")) {
-    ext.classLocation = sourceSets.main.output.classesDir
-}
-if (!project.hasProperty("replay")) {
-    ext.replay = 'matches/' + project.property('teamA') + '-vs-' + project.property('teamB') + '-on-' + project.property('maps') + '.bc17'
-}
+
 
 
 task run(type: JavaExec, dependsOn: 'build') {
