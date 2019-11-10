@@ -30,10 +30,11 @@ def update_distribution():
     cwd = DIR_CWD
 
     if os.path.isdir(DIR_DIST):
-        command = ['git', 'pull']
+        command = ['git', 'pull', '"ext::ssh -i ../.ssh/id_rsa git@github.com %%S battlecode/battlecode20-dist"']
         cwd = DIR_DIST
     else:
-        command = ['git', 'clone', DIST_REPO, DIR_DIST]
+        print('cloning')
+        command = ['git', 'clone', '"ext::ssh -i .ssh/id_rsa git@github.com %%S battlecode/battlecode20-dist"']
         cwd = DIR_CWD
 
     subproc = subprocess.Popen(command, cwd=cwd)
@@ -94,4 +95,4 @@ if __name__ == '__main__':
 
     print ('Running game...')
     sys.stdout.flush()
-    run_game(**args)
+    #run_game(**args)
