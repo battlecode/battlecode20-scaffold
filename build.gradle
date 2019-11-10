@@ -76,16 +76,6 @@ idea {
     }
 }
 
-// Default configuration for running matches.
-if (!project.hasProperty("teamA")) {
-    ext.teamA = "examplefuncsplayer"
-}
-if (!project.hasProperty("teamB")) {
-    ext.teamB = "examplefuncsplayer"
-}
-if (!project.hasProperty("maps")) {
-    ext.maps = "shrine"
-}
 
 // Here we define a task. Tasks like this one, 'unpackClient', can be
 // executed in the terminal with `./gradlew unpackClient` in Unix or
@@ -109,6 +99,16 @@ build.dependsOn('updateDistribution')
 // On OS X and Linux:
 //   `./gradlew -PteamA=<team A bot> -PteamB=<team B bot> -Pmaps=<comma
 //   separated list of maps>`
+
+
+if (!project.hasProperty("classLocation")) {
+    ext.classLocation = sourceSets.main.output.classesDir
+}
+if (!project.hasProperty("replay")) {
+    ext.replay = 'matches/' + project.property('teamA') + '-vs-' + project.property('teamB') + '-on-' + project.property('maps') + '.bc17'
+}
+
+
 task run(type: JavaExec, dependsOn: 'build') {
     description 'Runs a match without starting the client.'
     group 'battlecode'
@@ -123,10 +123,10 @@ task run(type: JavaExec, dependsOn: 'build') {
         '-Dbc.engine.debug-methods=true',
         '-Dbc.game.team-a='+project.property('teamA'),
         '-Dbc.game.team-b='+project.property('teamB'),
-        '-Dbc.game.team-a.url='+sourceSets.main.output.classesDir,
-        '-Dbc.game.team-b.url='+sourceSets.main.output.classesDir,
+        '-Dbc.game.team-a.url='+project.property('classLocation'),
+        '-Dbc.game.team-b.url='+project.property('classLocation'),
         '-Dbc.game.maps='+project.property('maps'),
-        '-Dbc.server.save-file=' + 'matches/' + project.property('teamA') + '-vs-' + project.property('teamB') + '-on-' + project.property('maps') + '.bc17'
+        '-Dbc.server.save-file=' + project.property('replay')
     ]
 }
 
