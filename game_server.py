@@ -55,7 +55,18 @@ def game_worker(gameinfo):
     # /tmp/bc20-game-{gameid}/
     #     `-- player1.zip
     #     `-- player2.zip
+    #     `-- replay.bc20
+    #     `-- classes
+    #     |   `-- <robot 1>
+    #         |   `-- RobotPlayer.class
+    #         |   `-- other classes
+    #     |   `-- <robot 2>
+    #         |   `-- RobotPlayer.class
+    #         |   `-- other classes    
+    serverdir = os.path.dirname(os.path.realpath(__file__))
     rootdir = os.path.join('/', 'tmp', 'bc20-game-{}-{}'.format(gametype, gameid))
+    classesdir = os.path.join(rootdir, 'classes')
+    replaydestination = os.path.join(rootdir, 'replay.bc20')
 
     # Obtain player executables
     try:
@@ -67,31 +78,40 @@ def game_worker(gameinfo):
     except:
         game_log_error(gametype, gameid, 'Could not retrieve executables from bucket')
 
+    # Unzip player zips to classesdir
+    os.mkdir(classesdir)
     result = util.monitor_command(
-        ['git', 'pull'],
-        cwd=PATH_DIST,
-        timeout=TIMEOUT_PULL)
+        ['unzip', 'player1.zip', '-d', classesdir],
+        cwd=rootdir,
+        timeout=TIMEOUT_UNZIP)
+    if result[0] != 0:
+        compile_log_error(submissionid, 'Could not decompress source file')
+        os.mkdir(classesdir)
+    result = util.monitor_command(
+        ['unzip', 'player2.zip', '-d', classesdir],
+        cwd=rootdir,
+        timeout=TIMEOUT_UNZIP)
+    if result[0] != 0:
+        compile_log_error(submissionid, 'Could not decompress source file')
 
-    # TODO: unzip player zips
-
-    # TODO: Invoke game and interpret game result
+    # TODO: test command
     result = util.monitor_command(
         ['./gradlew', 'run',
             '-PteamA={}'.format(player1),
             '-PteamB={}'.format(player2),
             '-Pmaps={}'.format(maps),
-            '-PclassLocation={}'.format(classDir)
+            '-PclassLocation={}'.format(classesdir),
+            '-Preplay={}'.format(replaydestination)
         ]
-        cwd=rootdir,
+        cwd=serverdir,
         timeout=TIMEOUT_GAME)
 
     if result[0] != 0:
         game_log_error(gametype, gameid, 'Game execution had non-zero return code')
 
-    # TODO: Check replay file path
     bucket = client.get_bucket(GCLOUD_BUCKET_SUBMISSION)
     try:
-        with open(os.path.join(rootdir, 'replay.bc20'), 'rb') as file_obj:
+        with open(replaydestination, 'rb') as file_obj:
             bucket.blob('{}-{}.bc20'.format(gametype, gameid)).upload_from_file(file_obj)
     except:
         game_log_error(gametype, gameid, 'Could not send replay file to bucket')

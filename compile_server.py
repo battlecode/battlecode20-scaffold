@@ -44,8 +44,11 @@ def compile_worker(submissionid):
     #            |      `-- RobotPlayer.java (or whatever the main class should be named)
     #            |      `-- Other things
     #     `-- player.zip
+    serverdir = os.path.dirname(os.path.realpath(__file__))
     rootdir   = os.path.join('/', 'tmp', 'bc20-compile-{}'.format(submissionid))
     sourcedir = os.path.join(rootdir, 'src')
+    builddir = os.path.join(serverdir, 'build','classes')
+    outputpath = os.path.join(rootdir, 'player.zip')
 
     # Obtain compressed archive of the submission
     try:
@@ -66,17 +69,23 @@ def compile_worker(submissionid):
 
     # TODO: double check this command; ensure any dependencies are in the docker image
     result = util.monitor_command(
-        ['./gradlew', 'build', '-Psource='.append(sourcedir)],
+        ['./gradlew', 'build', '-Psource={}'.format(sourcedir)],
         
-        cwd=os.path.dirname(os.path.realpath(__file__)), #this has to be the server file location for gradle reasons
+        cwd=serverdir, #this has to be the server location for gradle reasons
         timeout=TIMEOUT_COMPILE)
 
     # TODO: create a zip file with the necessary classes
+    result = util.monitor_command(
+        ['zip', '-r', outputpath, builddir],
+        cwd=rootdir,
+        timeout=TIMEOUT_UNZIP)
+    if result[0] != 0:
+        compile_log_error(submissionid, 'Could not compress output file')
 
     if result[0] == 0:
         # The compilation succeeded; send the classes to the bucket for storage
         try:
-            with open(os.path.join(rootdir, 'player.zip'), 'rb') as file_obj:
+            with open(outputpath, 'rb') as file_obj:
                 bucket.blob(os.path.join(submissionid, 'player.zip')).upload_from_file(file_obj)
         except:
             compile_log_error(submissionid, 'Could not send executable to bucket')

@@ -88,8 +88,7 @@ idea {
 
 
 // Here we define a task. Tasks like this one, 'unpackClient', can be
-// executed in the terminal with `./gradlew unpackClient` in Unix or
-// `gradlew unpackClient` in Windows.
+// executed in the terminal with `./gradlew unpackClient`
 task updateDistribution(type: Exec) {
     description 'Updates the client and engine'
     group 'battlecode'
@@ -103,17 +102,8 @@ compileJava.dependsOn('updateDistribution')
 // Another task. This one accepts three optional parameters, or "properties",
 // corresponding to the bots used by the two teams, and the map(s) used in this
 // game. These properties can be set in the command line with:
-// On windows:
-//   `gradlew -PteamA=<team A bot> -PteamB=<team B bot> -Pmaps=<comma
+//   `./gradlew run -PteamA=<team A bot> -PteamB=<team B bot> -Pmaps=<comma
 //   separated list of maps>`
-// On OS X and Linux:
-//   `./gradlew -PteamA=<team A bot> -PteamB=<team B bot> -Pmaps=<comma
-//   separated list of maps>`
-
-
-
-
-
 task run(type: JavaExec, dependsOn: 'build') {
     description 'Runs a match without starting the client.'
     group 'battlecode'

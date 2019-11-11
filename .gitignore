@@ -1,25 +1,30 @@
+# editor settings, gradle cache things
+.vscode
+.gradle
+.idea
+
+#generated files
 dist/*
 build/*
+matches/*
+client/*
+*.bc17
 
-/matches
 /deploy/lib
 /deploy/bin
-*.rms
-*.bc17
-/build/
 /bin/
+
+*.rms
 *.conf
 .DS_Store
 *.log
 *.swp
 *.pyc
-.gradle
-/client/
+
 *.jar
 *.iml
 *.ipr
 *.iws
-/.idea/
 
 
 # User-specific stuff:
