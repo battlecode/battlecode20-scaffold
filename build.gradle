@@ -59,7 +59,7 @@ def clientName = os.startsWith('windows') ? 'battlecode-client-win' :
 
 // The dependencies of this project.
 dependencies {
-    compile files("dist/battlecode-engine.jar")
+    compile files("dist/engine.jar")
     compile "org.jetbrains.kotlin:kotlin-stdlib:$versions.kotlin"
 
     // Scala!
@@ -186,7 +186,6 @@ configurations.all {
 }
 
 
-// We need to download the battlecode plugin before we can run the build script; this does that.
 buildscript {
     ext.versions = [
         kotlin: '1.0.6',
