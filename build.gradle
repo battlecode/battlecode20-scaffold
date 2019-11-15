@@ -113,7 +113,7 @@ task run(type: JavaExec, dependsOn: 'build') {
     args = ['-c=-']
     jvmArgs = [
         '-Dbc.server.mode=headless',
-        '-Dbc.server.map-path=maps',
+        '-Dbc.server.map-path='+project.property('mapLocation'),
         '-Dbc.server.debug=true',
         '-Dbc.engine.debug-methods=true',
         '-Dbc.game.team-a='+project.property('teamA'),
@@ -121,7 +121,7 @@ task run(type: JavaExec, dependsOn: 'build') {
         '-Dbc.game.team-a.url='+project.property('classLocation'),
         '-Dbc.game.team-b.url='+project.property('classLocation'),
         '-Dbc.game.maps='+project.property('maps'),
-        '-Dbc.server.save-file=' + project.property('replay')
+        '-Dbc.server.save-file='+project.property('replay')
     ]
 }
 
