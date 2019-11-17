@@ -1,7 +1,7 @@
 #!/bin/bash
-if  test -d "dist"; then
-    cd dist
-    git pull "ext::ssh -i ../.ssh/id_rsa git@github.com %%S battlecode/battlecode20-dist"
+
+if test -d "dist"; then
+    ssh-agent bash -c "ssh-add .ssh/id_rsa && cd dist && git pull"
 else
-    git clone "ext::ssh -i .ssh/id_rsa git@github.com %%S battlecode/battlecode20-dist" dist
+    ssh-agent bash -c "ssh-add .ssh/id_rsa && git clone git@github.com:battlecode/battlecode20-dist dist"
 fi
