@@ -47,7 +47,7 @@ repositories {
 
 // The dependencies of this project.
 dependencies {
-    compile "org.battlecode:engine20:2020-1.0.1"
+    compile "org.battlecode:engine20:2020-1.0.3"
     
     // compile "org.jetbrains.kotlin:kotlin-stdlib:$versions.kotlin"
 
