@@ -63,9 +63,15 @@ targetCompatibility = 1.8
 // We override Gradle's defaults for project directory layout.
 sourceSets {
     main {
-        scala.srcDirs = ["src/main"]
-        java.outputDir = file("$buildDir/classes")
-        scala.outputDir = file("$buildDir/classes")
+        java {
+            srcDir file('src')
+            outputDir = file("$buildDir/classes")
+        }
+        // scala.srcDirs = ["src/"]
+        // kotlin.srcDirs = ["src/"]
+        
+        // scala.outputDir = file("$buildDir/classes")
+        // kotlin.outputDir = file("$buildDir/classes")
     }
 
     test {
@@ -172,6 +178,7 @@ task listPlayers {
 
     doLast {
         sourceSets.main.allSource.each {
+            println it.name
             if (it.getName().equals('RobotPlayer.java')
                 || it.getName().equals('RobotPlayer.kt')
                 || it.getName().equals('RobotPlayer.scala')) {
@@ -182,13 +189,6 @@ task listPlayers {
             }
         }
     }
-}
-
-task printClasspath {
-    println 'printing classpath'
-    //configurations.each{ println it.name }
-    configurations.compile.each { println it }
-    
 }
 
 // This task prints out all available maps, in the format that the `run` task
