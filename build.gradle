@@ -6,16 +6,42 @@
 // all the tools needed to build player code!
 apply plugin: 'java'
 
-// The Kotlin plugin allows us to compile Kotlin, source files
-apply plugin: 'kotlin'
-
 // The Scala plugin expands upon the Java plugin, allowing us to compile
 // Scala source files.
-apply plugin: 'scala'
+//apply plugin: 'scala'
 
-// These plugins allow for this build script to be compatible with IDEs.
 apply plugin: 'idea'
 apply plugin: 'eclipse'
+
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://maven.pkg.github.com/battlecode/battlecode20"
+        credentials {
+            username = project.findProperty("gpr.user") ?: System.getenv("BC20_GITUSERNAME")
+            password = project.findProperty("gpr.key") ?: System.getenv("BC20_GITKEY")
+        }
+    }
+    // Use the JCenter repo to resolve Scala dependencies.
+    jcenter()
+}
+
+// The dependencies of this project.
+dependencies {
+    implementation 'org.battlecode:battlecode:2020.0.0.1'
+
+    // Scala!
+//    implementation 'org.scala-lang:scala-library:2.11.7'
+    // testImplementation 'org.scalatest:scalatest_2.11:3.0.0'
+    // testImplementation 'junit:junit:4.12'
+}
+// Battlecode updates a lot.
+// We should make sure to check for new dependencies frequently.
+configurations.all {
+    resolutionStrategy.cacheDynamicVersionsFor 60, 'seconds'
+}
+
 
 // Tell gradle that we want Java 8.
 sourceCompatibility = 1.8
@@ -24,31 +50,27 @@ targetCompatibility = 1.8
 // We override Gradle's defaults for project directory layout.
 sourceSets {
     main {
-        scala.srcDirs = [ project.property('source') ]
-        kotlin.srcDirs = [ project.property('source') ]
-        output.classesDir = "$buildDir/classes"
+//        scala.srcDirs = ["src/"]
+
+        java.outputDir = file("$buildDir/classes")
+//        scala.outputDir = file("$buildDir/classes")
     }
 
     test {
-        scala.srcDirs = ["test"]
-        kotlin.srcDirs = ["test"]
-        output.classesDir = "$buildDir/tests"
+//        scala.srcDirs = ["src/test"]
+
+        java.outputDir = file("$buildDir/tests")
+//        scala.outputDir = file("$buildDir/tests")
     }
 }
 
 //Setting default output directories for compiled classes and generated replay files
 //For other default properties, see gradle.properties
 if (!project.hasProperty("classLocation")) {
-    ext.classLocation = sourceSets.main.output.classesDir
+    ext.classLocation = sourceSets.main.output.classesDirs
 }
 if (!project.hasProperty("replay")) {
-    ext.replay = 'matches/' + project.property('teamA') + '-vs-' + project.property('teamB') + '-on-' + project.property('maps') + '.bc17'
-}
-
-
-repositories {
-    // Use the JCenter repo to resolve Scala dependencies.
-    jcenter()
+    ext.replay = 'matches/' + project.property('teamA') + '-vs-' + project.property('teamB') + '-on-' + project.property('maps') + '.bc20'
 }
 
 // Download a different version of the client depending on the local OS.
@@ -56,17 +78,6 @@ def os = System.getProperty("os.name").toLowerCase()
 def clientName = os.startsWith('windows') ? 'battlecode-client-win' :
                  os.startsWith('mac') ? 'battlecode-client-mac' :
                  'battlecode-client-linux'
-
-// The dependencies of this project.
-dependencies {
-    compile files("dist/battlecode-engine.jar")
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$versions.kotlin"
-
-    // Scala!
-    compile group: 'org.scala-lang', name: 'scala-library', version: versions.scala
-    compile group: 'org.scala-lang', name: 'scala-compiler', version: versions.scala
-    compile group: 'org.scala-lang', name: 'scala-reflect', version: versions.scala
-}
 
 // Eclipse specific setup to enable docs and sources, and configure layout.
 eclipse {
@@ -85,20 +96,7 @@ idea {
         downloadJavadoc = true
     }
 }
-
-
-// Here we define a task. Tasks like this one, 'unpackClient', can be
-// executed in the terminal with `./gradlew unpackClient` in Unix or
-// `gradlew unpackClient` in Windows.
-task updateDistribution(type: Exec) {
-    description 'Updates the client and engine'
-    group 'battlecode'
-
-    commandLine os.startsWith('windows') ? './pull_dist.bat' : './pull_dist.sh'
-}
-
 build.group = 'battlecode'
-compileJava.dependsOn('updateDistribution')
 
 // Another task. This one accepts three optional parameters, or "properties",
 // corresponding to the bots used by the two teams, and the map(s) used in this
@@ -109,11 +107,6 @@ compileJava.dependsOn('updateDistribution')
 // On OS X and Linux:
 //   `./gradlew -PteamA=<team A bot> -PteamB=<team B bot> -Pmaps=<comma
 //   separated list of maps>`
-
-
-
-
-
 task run(type: JavaExec, dependsOn: 'build') {
     description 'Runs a match without starting the client.'
     group 'battlecode'
@@ -143,6 +136,7 @@ task listPlayers {
 
     doLast {
         sourceSets.main.allSource.each {
+            println it.name
             if (it.getName().equals('RobotPlayer.java')
                 || it.getName().equals('RobotPlayer.kt')
                 || it.getName().equals('RobotPlayer.scala')) {
@@ -163,13 +157,13 @@ task listMaps {
 
     doLast {
         sourceSets.main.compileClasspath.each {
-            if (it.toString().contains('battlecode-2017')) {
+            if (it.toString().contains('battlecode-2020')) {
                 FileCollection fc = zipTree(it)
                 fc += fileTree(new File(project.projectDir, 'maps'))
                 fc.each {
                     String fn = it.getName()
-                    if (fn.endsWith('.map17')) {
-                        println 'MAP: '+fn.substring(0, fn.indexOf('.map17'))
+                    if (fn.endsWith('.map20')) {
+                        println 'MAP: '+fn.substring(0, fn.indexOf('.map20'))
                     }
                 }
             }
@@ -179,37 +173,12 @@ task listMaps {
 
 // This task prepares player code for upload, assembling it into a Java archive.
 // This archive can be uploaded at `www.battlecode.org`.
-task jarForUpload(type: Jar) {
+/*task jarForUpload(type: Jar) {
     description 'Assembles source code into an archive, ready to be uploaded to the Battlecode site.'
     group 'battlecode'
 
     from sourceSets.main.scala.srcDirs
     destinationDir = project.projectDir
     archiveName = 'battlecode-player-upload.jar'
-}
+}*/
 
-// Battlecode updates a lot.
-// We should make sure to check for new dependencies frequently.
-configurations.all {
-    // Check for updates every build.
-    resolutionStrategy.cacheDynamicVersionsFor 60, 'seconds'
-}
-
-
-// We need to download the battlecode plugin before we can run the build script; this does that.
-buildscript {
-    ext.versions = [
-        kotlin: '1.0.6',
-        scala: '2.11.7'
-    ]
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$versions.kotlin"
-    }
-    configurations.all {
-        // Check for updates every build.
-        resolutionStrategy.cacheDynamicVersionsFor 60, 'seconds'
-    }
-}
