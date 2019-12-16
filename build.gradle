@@ -19,8 +19,8 @@ repositories {
     maven {
         url "https://maven.pkg.github.com/battlecode/battlecode20"
         credentials {
-            username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
-            password = project.findProperty("gpr.key") ?: System.getenv("PASSWORD")
+            username = project.findProperty("gpr.user") ?: System.getenv("BC20_GITUSERNAME")
+            password = project.findProperty("gpr.key") ?: System.getenv("BC20_GITKEY")
         }
     }
     // Use the JCenter repo to resolve Scala dependencies.
