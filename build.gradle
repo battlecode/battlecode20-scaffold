@@ -48,6 +48,7 @@ sourceSets {
     main {
 //        scala.srcDirs = ["src/"]
 
+        java.srcDirs = [ project.property('source') ]
         java.outputDir = file("$buildDir/classes")
 //        scala.outputDir = file("$buildDir/classes")
     }
