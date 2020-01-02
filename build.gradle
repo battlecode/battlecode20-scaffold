@@ -65,7 +65,7 @@ sourceSets {
 //Setting default output directories for compiled classes and generated replay files
 //For other default properties, see gradle.properties
 if (!project.hasProperty("classLocation")) {
-    ext.classLocation = sourceSets.main.output.classesDirs
+    ext.classLocation = sourceSets.main.output.classesDirs.getAsPath()
 }
 if (!project.hasProperty("replay")) {
     ext.replay = 'matches/' + project.property('teamA') + '-vs-' + project.property('teamB') + '-on-' + project.property('maps') + '.bc20'
