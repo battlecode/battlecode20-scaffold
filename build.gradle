@@ -1,24 +1,22 @@
-// This is the build file we use to compile and run Battlecode players.
-// We're using Gradle: https://gradle.org/
-
 // Gradle's plugins allow it to automatically generate build scripts
 // for different types of code. Here we apply the Java plugin, which provides
 // all the tools needed to build player code!
 apply plugin: 'java'
 
-// The Scala plugin expands upon the Java plugin, allowing us to compile
-// Scala source files.
+// The Scala plugin expands upon the Java plugin, allowing us to compile Scala source files.
 //apply plugin: 'scala'
 
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 
 ext.versions = [
-    battlecode: new URL("https://2020.battlecode.org/version.txt").text
+    battlecode: new File(projectDir, "version.txt").text
     //scala: '2.11.7'
 ]
 
 // TODO: DELETE CREDENTIALS AFTER PUBLIC RELEASE
+
+// Here we register battlecode's maven repository, so the gradle knows where to download the engine and client from
 repositories {
     mavenCentral()
     maven {
@@ -110,21 +108,43 @@ eclipse {
 // IntelliJ settings.
 idea {
     module {
+        jdkName = 1.8
         downloadSources = true
         downloadJavadoc = true
     }
 }
 
 
+
+task screamForUpdate() {
+    group 'battlecode'
+    doLast {
+        if (versions.battlecode != new URL("https://2020.battlecode.org/version.txt").text) print("\n\n\n\n\n\n\tNEW VERSION AVAILABLE\n\trun ./gradlew update to download \n\n\n\n")
+    }
+}
+
+// This task pulls the newest version number from the website
+// The gradle will then download that version of the engine and client
+task update {
+    group 'battlecode'
+    doLast {
+        //overwrites stored version number
+        new File(projectDir, "version.txt").text = new URL("https://2020.battlecode.org/version.txt").text
+
+        //overwrites cached version number
+        versions.battlecode = new File(projectDir, "version.txt").text
+        println("Update Complete")
+    }
+}
+
 // Here we define a task. Tasks like this one, 'unpackClient', can be
-// executed in the terminal with `./gradlew unpackClient` in Unix or
-// `gradlew unpackClient` in Windows.
+// executed in the terminal with `gradlew unpackClient`
 task unpackClient(type: Copy, dependsOn: configurations.client) {
     description 'Downloads the client.'
     group 'battlecode'
 
     dependsOn configurations.client
-
+    dependsOn screamForUpdate
     from {
         configurations.client.collect {
             zipTree(it)
@@ -136,17 +156,18 @@ task unpackClient(type: Copy, dependsOn: configurations.client) {
 build.group = 'battlecode'
 build.dependsOn('unpackClient')
 
-// Another task. This one accepts three optional parameters, or "properties",
-// corresponding to the bots used by the two teams, and the map(s) used in this
-// game. These properties can be set in the command line with:
-// On windows:
+// Another task. This one accepts optional parameters, or "properties",
+// corresponding to the bots used by the two teams, the map(s) used in this
+// game, the location of the classes for the two teams, and the destination of the replay file.
+// These properties can be set in the command line with:
+// On Windows cmd:
 //   `gradlew -PteamA=<team A bot> -PteamB=<team B bot> -Pmaps=<comma
-//   separated list of maps>`
-// On OS X and Linux:
+//   separated list of maps> -Preplay=<destination> -PclassLocation=<where the packages are stored>`
+// On Powershell, OS X, and Linux:
 //   `./gradlew -PteamA=<team A bot> -PteamB=<team B bot> -Pmaps=<comma
 //   separated list of maps>`
+
 task run(type: JavaExec, dependsOn: 'build') {
-    print(versions.battlecode)
     description 'Runs a match without starting the client.'
     group 'battlecode'
 
@@ -163,7 +184,46 @@ task run(type: JavaExec, dependsOn: 'build') {
         '-Dbc.game.team-a.url='+project.property('classLocation'),
         '-Dbc.game.team-b.url='+project.property('classLocation'),
         '-Dbc.game.maps='+project.property('maps'),
-        '-Dbc.server.save-file=' + project.property('replay')
+        '-Dbc.server.save-file=' +project.property('replay')
+    ]
+}
+task runFromClient(type: JavaExec, dependsOn: 'build') {
+    main = 'battlecode.server.Main'
+    classpath = project.sourceSets.main.runtimeClasspath
+    args = ['-c=-']
+    jvmArgs = [
+            '-Dbc.server.wait-for-client=true',
+            '-Dbc.server.mode=headless',
+            '-Dbc.server.map-path=maps',
+            '-Dbc.server.debug=false',
+            '-Dbc.server.robot-player-to-system-out=false',
+            '-Dbc.engine.debug-methods=true',
+            '-Dbc.game.team-a='+project.property('teamA'),
+            '-Dbc.game.team-b='+project.property('teamB'),
+            '-Dbc.game.team-a.url='+project.property('classLocation'),
+            '-Dbc.game.team-b.url='+project.property('classLocation'),
+            '-Dbc.game.maps='+project.property('maps'),
+            '-Dbc.server.save-file=' + project.property('replay')
+    ]
+}
+task runDebug(type: JavaExec, dependsOn: 'build') {
+    group 'battlecode'
+    main = 'battlecode.server.Main'
+    classpath = project.sourceSets.main.runtimeClasspath
+    args = ['-c=-']
+    jvmArgs = [
+            '-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005',
+            '-Dbc.server.mode=headless',
+            '-Dbc.server.map-path=maps',
+            '-Dbc.server.debug=false',
+            '-Dbc.server.robot-player-to-system-out=true',
+            '-Dbc.engine.debug-methods=true',
+            '-Dbc.game.team-a='+project.property('teamA'),
+            '-Dbc.game.team-b='+project.property('teamB'),
+            '-Dbc.game.team-a.url='+project.property('classLocation'),
+            '-Dbc.game.team-b.url='+project.property('classLocation'),
+            '-Dbc.game.maps='+project.property('maps'),
+            '-Dbc.server.save-file=' + project.property('replay')
     ]
 }
 
@@ -210,71 +270,12 @@ task listMaps {
     }
 }
 
-// This task prepares player code for upload, assembling it into a Java archive.
-// This archive can be uploaded at `2020.battlecode.org`.
-task jarForUpload(type: Jar) {
-    description 'Assembles source code into an archive, ready to be uploaded to the Battlecode site.'
-    group 'battlecode'
 
-    from 'src'
-    destinationDir = project.projectDir
-    archiveName = 'battlecode-player-upload.jar'
-}
-
-task runFromClient(type: JavaExec, dependsOn: 'build') {
-    main = 'battlecode.server.Main'
-    classpath = project.sourceSets.main.runtimeClasspath
-    args = ['-c=-']
-    jvmArgs = [
-            '-Dbc.server.wait-for-client=true',
-            '-Dbc.server.mode=headless',
-            '-Dbc.server.map-path=maps',
-            '-Dbc.server.debug=false',
-            '-Dbc.server.robot-player-to-system-out=false',
-            '-Dbc.engine.debug-methods=true',
-            '-Dbc.game.team-a='+project.property('teamA'),
-            '-Dbc.game.team-b='+project.property('teamB'),
-            '-Dbc.game.team-a.url='+project.property('classLocation'),
-            '-Dbc.game.team-b.url='+project.property('classLocation'),
-            '-Dbc.game.maps='+project.property('maps'),
-            '-Dbc.server.save-file=' + project.property('replay')
-    ]
-}
-
-task runDebug(type: JavaExec, dependsOn: 'build') {
-    main = 'battlecode.server.Main'
-    classpath = project.sourceSets.main.runtimeClasspath
-    args = ['-c=-']
-    jvmArgs = [
-            '-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005',
-            '-Dbc.server.mode=headless',
-            '-Dbc.server.map-path=maps',
-            '-Dbc.server.debug=false',
-            '-Dbc.server.robot-player-to-system-out=true',
-            '-Dbc.engine.debug-methods=true',
-            '-Dbc.game.team-a='+project.property('teamA'),
-            '-Dbc.game.team-b='+project.property('teamB'),
-            '-Dbc.game.team-a.url='+project.property('classLocation'),
-            '-Dbc.game.team-b.url='+project.property('classLocation'),
-            '-Dbc.game.maps='+project.property('maps'),
-            '-Dbc.server.save-file=' + project.property('replay')
-    ]
-}
-
-
-
-
-
-// is this needed????
+// Some client commands for 32 bit architectures
 def arch64 = false
 def arch32 = false
-
-if (System.getProperty("os.arch").matches("^(x8664|amd64|ia32e|em64t|x64)\$")) {
-    arch64 = true
-}
-if (System.getProperty("os.arch").matches("^(x8632|x86|i[3-6]86|ia32|x32)\$")) {
-    arch32 = true
-}
+if (System.getProperty("os.arch").matches("^(x8664|amd64|ia32e|em64t|x64)\$")) arch64 = true
+if (System.getProperty("os.arch").matches("^(x8632|x86|i[3-6]86|ia32|x32)\$")) arch32 = true
 
 
 if (arch32) {
