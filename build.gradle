@@ -10,7 +10,7 @@ apply plugin: 'idea'
 apply plugin: 'eclipse'
 
 ext.versions = [
-    battlecode: new File(projectDir, "version.txt").text
+    battlecode: new File(projectDir, "version.txt").text.trim()
     //scala: '2.11.7'
 ]
 
@@ -125,7 +125,7 @@ task version {
 task screamForUpdate() {
     group 'battlecode'
     doLast {
-        if (versions.battlecode != new URL("https://2020.battlecode.org/version.txt").text) print("\n\n\n\n\n\n\tNEW VERSION AVAILABLE\n\trun ./gradlew update to download \n\n\n\n")
+        if (versions.battlecode != new URL("https://2020.battlecode.org/version.txt").text.trim()) print("\n\n\n\n\n\n\tNEW VERSION AVAILABLE\n\trun ./gradlew update to download \n\n\n\n")
     }
 }
 
@@ -135,7 +135,7 @@ task update {
     group 'battlecode'
     doLast {
         //overwrites stored version number
-        new File(projectDir, "version.txt").text = new URL("https://2020.battlecode.org/version.txt").text
+        new File(projectDir, "version.txt").text = new URL("https://2020.battlecode.org/version.txt").text.trim()
 
         //overwrites cached version number
         versions.battlecode = new File(projectDir, "version.txt").text
