@@ -4,10 +4,11 @@
 apply plugin: 'java'
 
 // The Scala plugin expands upon the Java plugin, allowing us to compile Scala source files.
-//apply plugin: 'scala'
+apply plugin: 'scala'
 
 apply plugin: 'idea'
 apply plugin: 'eclipse'
+
 
 ext.versions = [
     battlecode: new File(projectDir, "version.txt").text
@@ -46,18 +47,18 @@ targetCompatibility = 1.8
 sourceSets {
     main {
         java.srcDirs = [ project.property('source') ]
-        //scala.srcDirs = [ project.property('source') ]
+        scala.srcDirs = [ project.property('source') ]
 
         java.outputDir = file("$buildDir/classes")
-        //scala.outputDir = file("$buildDir/classes")
+        scala.outputDir = file("$buildDir/classes")
     }
 
     test {
         java.srcDirs = ["test"]
-        //scala.srcDirs = ["test"]
+        scala.srcDirs = ["test"]
 
         java.outputDir = file("$buildDir/tests")
-        //scala.outputDir = file("$buildDir/tests")
+        scala.outputDir = file("$buildDir/tests")
     }
 }
 
@@ -91,9 +92,9 @@ dependencies {
     client group: 'org.battlecode', name: clientName, version: versions.battlecode
 
     // Scala!
-    // implementation 'org.scala-lang:scala-library:2.11.7'
-    // testImplementation 'org.scalatest:scalatest_2.11:3.0.0'
-    // testImplementation 'junit:junit:4.12'
+    implementation 'org.scala-lang:scala-library:2.11.7'
+    testImplementation 'org.scalatest:scalatest_2.11:3.0.0'
+    testImplementation 'junit:junit:4.12'
 }
 
 // Eclipse specific setup to enable docs and sources, and configure layout.
@@ -243,7 +244,7 @@ task listPlayers {
         sourceSets.main.allSource.each {
             println it.name
             if (it.getName().equals('RobotPlayer.java')
-                //|| it.getName().equals('RobotPlayer.scala')
+                || it.getName().equals('RobotPlayer.scala')
                 ) {
                 URI base = new File(project.projectDir, 'src').toURI()
                 URI full = it.toURI()
