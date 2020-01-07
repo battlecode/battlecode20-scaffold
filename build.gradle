@@ -114,7 +114,12 @@ idea {
     }
 }
 
-
+task version {
+    group 'battlecode'
+    doLast{
+        println("\nVersion: " + versions.battlecode + "\n")
+    }
+}
 
 task screamForUpdate() {
     group 'battlecode'
