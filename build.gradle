@@ -313,5 +313,11 @@ task unpackClient32(type: Copy, dependsOn: configurations.client32) {
     into 'client32/'
 }
 
+task buildMap(type: JavaExec, dependsOn: 'build') {
+    group 'battlecode'
+    main = 'maps.' + project.property('buildMap')
+    classpath = project.sourceSets.main.runtimeClasspath
+}
+
 unpackClient32.onlyIf { arch32 }
 build.dependsOn('unpackClient32')
