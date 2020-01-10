@@ -80,6 +80,7 @@ public class RandomSoup1 {
                 mapBuilder.setSymmetricDirt(i, j, -20);
             }
         }
+        mapBuilder.setSymmetricDirt(12,26,Integer.MIN_VALUE);
 
         mapBuilder.addSymmetricCow(5, 18);
         mapBuilder.addSymmetricCow(17, 3);
