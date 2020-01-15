@@ -107,7 +107,7 @@ public strictfp class RobotPlayer {
     static void runDeliveryDrone() throws GameActionException {
         Team enemy = rc.getTeam().opponent();
         if (!rc.isCurrentlyHoldingUnit()) {
-            // See if there are any enemy robots within striking range (distance 1 from lumberjack's radius)
+            // See if there are any enemy robots within capturing range
             RobotInfo[] robots = rc.senseNearbyRobots(GameConstants.DELIVERY_DRONE_PICKUP_RADIUS_SQUARED, enemy);
 
             if (robots.length > 0) {
